@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Valeurs par défaut
+message=""
+length=100
+use_sondes=false
+seed=""
+
+# Afficher l'aide
+function show_help {
+    echo "Usage: simulateur [options]"
+    echo "Options:"
+    echo "  -mess m    Précise le message ou la longueur du message à émettre."
+    echo "             Si m est une chaîne binaire d'au moins 7 caractères, elle est utilisée comme message."
+    echo "             Si m est un entier de 1 à 6 chiffres, il est utilisé comme longueur du message généré."
+    echo "             Par défaut, le message a une longueur de 100."
+    echo "  -s         Utilise les sondes dans la simulation."
+    echo "  -seed v    Utilise la valeur entière v comme semence pour initialiser les générateurs aléatoires."
+    echo "  -help      Affiche cette aide."
+    exit 0
+}
+
+# Fonction pour générer un message aléatoire de longueur spécifiée
+function generate_random_message {
+    local length=$1
+    echo $(head /dev/urandom | tr -dc '01' | head -c $length)
+}
+
+# Parser les options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -mess)
+            if [[ $2 =~ ^[0-1]{7,}$ ]]; then
+                message=$2
+            elif [[ $2 =~ ^[0-9]{1,6}$ ]]; then
+                length=$2
+            else
+                echo "Erreur: Le paramètre après -mess doit être une chaîne binaire ou un entier de 1 à 6 chiffres."
+                exit 1
+            fi
+            shift 2
+            ;;
+        -s)
+            use_sondes=true
+            shift
+            ;;
+        -seed)
+            if [[ $2 =~ ^[0-9]+$ ]]; then
+                seed=$2
+            else
+                echo "Erreur: Le paramètre après -seed doit être un entier."
+                exit 1
+            fi
+            shift 2
+            ;;
+        -help)
+            show_help
+            ;;
+        *)
+            echo "Option inconnue: $1"
+            show_help
+            ;;
+    esac
+done
+
+# Si aucun message n'est fourni, on génère un message aléatoire
+if [[ -z $message ]]; then
+    message=$(generate_random_message $length)
+fi
+
+# Affichage des paramètres de simulation
+echo "=== Simulation ==="
+echo "Message à émettre : $message"
+echo "Longueur du message : ${#message}"
+if [[ $use_sondes == true ]]; then
+    echo "Utilisation des sondes : Oui"
+else
+    echo "Utilisation des sondes : Non"
+fi
+if [[ -n $seed ]]; then
+    echo "Utilisation d'une semence aléatoire : Oui (valeur : $seed)"
+else
+    echo "Utilisation d'une semence aléatoire : Non"
+fi
+
+# Simulation de transmission
+echo "Lancement de la simulation..."
+# Code pour simuler la transmission et éventuellement l'ajout des sondes ou d'autres fonctionnalités
+
+echo "Simulation terminée."

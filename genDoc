@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "Génération de la documentation"
+
+javadoc -d docs $(find src -name "*.java")
+
+echo "Documentation prête à l'emploi"

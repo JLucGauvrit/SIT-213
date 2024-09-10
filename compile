@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Compilation..."
+
+# Compiler tous les fichiers Java présents dans le répertoire src/ et ses sous-répertoires
+javac -d bin $(find src -name "*.java")
+
+chmod -R +x bin/
+
+echo "Compilation terminée"

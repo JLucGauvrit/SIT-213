@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Effacer le contenu du répertoire docs/
+echo "Effacement du contenu de docs/..."
+rm -rf docs/*
+
+# Effacer le contenu du répertoire bin/
+echo "Effacement du contenu de bin/..."
+rm -rf bin/*
+
+echo "Effacement terminé."
