@@ -62,7 +62,16 @@ public class Simulateur {
       	// TODO : Partie à compléter
 
      // Création des composants de la chaîne
-        source = new SourceAleatoire();  // Crée la source fixe avec un message prédéfini
+    	if(messageAleatoire) {
+    		source = new SourceAleatoire(nbBitsMess);  // Crée la source fixe avec un message prédéfini
+    	}
+    	else if(aleatoireAvecGerme){
+    		source = new SourceAleatoire(nbBitsMess, seed);
+    	}
+    	else {
+    		source = new SourceFixe(messageString);
+    	}
+        
         
         // Instanciation du TransmetteurParfait (sans génériques ici)
         transmetteurLogique = new TransmetteurParfait();
@@ -76,9 +85,10 @@ public class Simulateur {
         // Connecter le transmetteur à la destination
         transmetteurLogique.connecter(destination);      
         
-        
+        if(affichage) {
             source.connecter(new SondeLogique("Source", 200));
             transmetteurLogique.connecter(new SondeLogique("Transmetteur", 200));
+        }
         
     }
    
