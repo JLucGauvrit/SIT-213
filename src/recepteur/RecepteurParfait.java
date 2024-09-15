@@ -3,138 +3,205 @@ package recepteur;
 import destinations.DestinationInterface;
 import information.*;
 
+/**
+ * La classe RecepteurParfait est un récepteur parfait qui reçoit des informations
+ * modulées et les démodule en fonction du type de modulation (RZ, NRZ, NRZT).
+ * Les échantillons reçus sont ensuite convertis en bits booléens (true ou false).
+ *
+ * @author 
+ * @version 
+ */
 public class RecepteurParfait extends Recepteur<Float, Boolean> {
-	private int facteurDEchantillonnage = 3;
-	private float Amax;
-	private float Amin;
-	private String modulation = "RZ";
-	
-	public RecepteurParfait(int facteurDEchantillonnage, String modulation) {
-		super();
-		informationRecue = new Information<>();
+
+    /**
+     * Le facteur d'échantillonnage utilisé pour la démodulation.
+     */
+    private int facteurDEchantillonnage = 3;
+    
+    /**
+     * La valeur maximale d'amplitude des signaux reçus.
+     */
+    private float Amax;
+    
+    /**
+     * La valeur minimale d'amplitude des signaux reçus.
+     */
+    private float Amin;
+    
+    /**
+     * Le type de modulation utilisé (RZ, NRZ, NRZT).
+     */
+    private String modulation = "NRZ";
+    
+    
+    private int nbElementRecue;
+    
+    /**
+     * Constructeur du RecepteurParfait qui initialise les paramètres par défaut de Amax et Amin
+     * en fonction de la modulation choisie.
+     * 
+     * @param facteurDEchantillonnage le facteur d'échantillonnage utilisé pour la démodulation
+     * @param modulation le type de modulation utilisé (RZ, NRZ, NRZT)
+     * @throws InformationNonConformeException si le type de modulation est erroné
+     */
+    public RecepteurParfait(int facteurDEchantillonnage, String modulation) throws InformationNonConformeException { 
+        super();
+        informationRecue = new Information<>();
         informationEmise = new Information<>();
         
         this.facteurDEchantillonnage = facteurDEchantillonnage;
         this.modulation = modulation;
         
-        if(modulation.equals("NRZT") || modulation.equals("NRZ")) {
-        	this.Amax = 5;
-        	this.Amin = -5;
-        }
+        switch (modulation) {
+        case "RZ" :
+            this.Amin = 0;
+            break;
+            
+        case "NRZ" :
+        case "NRZT" :
+            this.Amin = -5;
+            break;
+            
+        default :
+            throw new InformationNonConformeException("Information sur le type de modulation erronée");
+        } 
         
-        if(modulation.equals("RZ")) {
-        	this.Amax = 5;
-        	this.Amin = 0;
-        }
-	}
-	
-	public RecepteurParfait(int facteurDEchantillonnage, String modulation, float Amax, float Amin) {
-		super();
-		informationRecue = new Information<>();
+        this.Amax = 5;
+    }
+    
+    /**
+     * Constructeur du RecepteurParfait avec des valeurs personnalisées pour Amax et Amin.
+     * 
+     * @param Amax la valeur maximale de l'amplitude
+     * @param Amin la valeur minimale de l'amplitude
+     * @param facteurDEchantillonnage le facteur d'échantillonnage utilisé pour la démodulation
+     * @param modulation le type de modulation utilisé (RZ, NRZ, NRZT)
+     * @throws InformationNonConformeException si les valeurs de Amax, Amin ou la modulation sont invalides
+     */
+    public RecepteurParfait(float Amax, float Amin, int facteurDEchantillonnage, String modulation) throws InformationNonConformeException { 
+        super();
+        informationRecue = new Information<>();
         informationEmise = new Information<>();
         
         this.facteurDEchantillonnage = facteurDEchantillonnage;
         this.modulation = modulation;
+        
+        if (Amax < 0) {
+            throw new InformationNonConformeException("Amax doit être supérieure à 0");
+        }
+        
+        if (Amin >= Amax) {
+            throw new InformationNonConformeException("Amax doit être strictement supérieur à Amin");
+        }
+        
+        switch (modulation) {
+        case "RZ" :
+            this.Amin = 0;
+            break;
+            
+        case "NRZ" :
+        case "NRZT" :
+            if (Amin > 0) {
+                throw new InformationNonConformeException("Amin doit être inférieure à 0");
+            }
+            this.Amin = Amin;
+            break;
+            
+        default :
+            throw new InformationNonConformeException("Information sur le type de modulation erronée");
+        } 
         
         this.Amax = Amax;
-        this.Amin = Amin;
-	}
+    }
 
-	public void demodulation() throws InformationNonConformeException {
-		int nbElementRecue = informationRecue.nbElements();
-		
-		if (modulation.equals("RZ")) {
-			// Démodulation RZ : échantillonnage au milieu de chaque intervalle
-		    for (int i = 0; i < nbElementRecue; i += facteurDEchantillonnage) {
-		        // Calcul de l'indice au milieu de chaque intervalle
-		        int milieu = i + facteurDEchantillonnage / 2;
+    /**
+     * Méthode pour démoduler les signaux en utilisant la modulation NRZT.
+     * 
+     * @throws InformationNonConformeException si une erreur survient lors de la démodulation
+     */
+    public void demodulerNRZT() throws InformationNonConformeException {
+        // TODO : Implémenter la démodulation NRZT
+    }
 
-		        // Vérification que l'indice est bien dans les limites de informationRecue
-		        if (milieu < nbElementRecue) {
-		            // Si la valeur au milieu de l'intervalle est >= seuil, on ajoute true
-		            if (informationRecue.iemeElement(milieu) >= (Amax + Amin) / 2) {
-		                informationEmise.add(true);
-		            } else {
-		                informationEmise.add(false);
-		            }
-		        } else {
-		            // Si l'indice dépasse nbElementRecue, on arrête la boucle
-		            break;
-		        }
-		    }
-			
-		}
-		
-		if (modulation.equals("NRZ")) {
-			int nbElementEmis = nbElementRecue;
-			
-			for(int i=0 ; i < nbElementEmis ; i++) {
-				if(informationRecue.iemeElement(i) >= Amax) {
-					informationEmise.add(true);
-				}
-				else if(informationRecue.iemeElement(i) <= Amin){
-					informationEmise.add(false);
-				}
-				else {
-		            // Si la valeur reçue est incohérente, on lance une exception
-		            throw new InformationNonConformeException("Valeur incohérente dans informationRecue");
-		        }
-			}
-			
-		}
-		
-		if (modulation.equals("NRZT")) {
-			int nbElementEmis = nbElementRecue / facteurDEchantillonnage;
+    /**
+     * Méthode pour démoduler les signaux en utilisant la modulation NRZ.
+     * 
+     * @throws InformationNonConformeException si une valeur incohérente est détectée dans les informations reçues
+     */
+    public void demodulerNRZ() throws InformationNonConformeException {
+        int nbElementEmis = nbElementRecue;
+        
+        for (int i = 0; i < nbElementEmis; i++) {
+            if (informationRecue.iemeElement(i) >= Amax) {
+                informationEmise.add(true);
+            } else if (informationRecue.iemeElement(i) <= Amin) {
+                informationEmise.add(false);
+            } else {
+                // Si la valeur reçue est incohérente, on lance une exception
+                throw new InformationNonConformeException("Valeur incohérente dans informationRecue");
+            }
+        }
+    }
 
-		    // Démodulation NRZT : Parcourir les éléments par groupe de facteurDEchantillonnage
-		    for (int i = 0; i < nbElementRecue; i += facteurDEchantillonnage) {
-		        boolean atLeastOneAmax = false;
-		        boolean atLeastOneAmin = false;
-		        
-		        // Parcourir les éléments de l'intervalle [i, i + facteurDEchantillonnage)
-		        for (int j = 0; j < facteurDEchantillonnage && (i + j) < nbElementRecue; j++) {
-		            float valeur = informationRecue.iemeElement(i + j);
-		            
-		            // Vérifier si une valeur atteint Amax ou Amin
-		            if (valeur >= Amax) {
-		                atLeastOneAmax = true;
-		            }
-		            if (valeur <= Amin) {
-		                atLeastOneAmin = true;
-		            }
-		        }
-
-		        // Décider de la valeur à ajouter à informationEmise
-		        if (atLeastOneAmax) {
-		            informationEmise.add(true);  // Ajout de true si au moins une valeur atteint Amax
-		        } else if (atLeastOneAmin) {
-		            informationEmise.add(false);  // Ajout de false si aucune valeur n'atteint Amax mais au moins une atteint Amin
-		        } else {
-		            // Gérer le cas où aucune valeur n'atteint ni Amax ni Amin (optionnel selon la logique attendue)
-		            informationEmise.add(false);  // On peut ajouter false par défaut
-		        }
-		    }
-	    }
-		
-	}
-	
-	
-	
-	@Override
-	public void recevoir(Information<Float> information) throws InformationNonConformeException {
-		for (Float i : information) {
+    /**
+     * Méthode pour démoduler les signaux en utilisant la modulation RZ.
+     * 
+     * @throws InformationNonConformeException si une erreur survient lors de la démodulation
+     */
+    public void demodulerRZ() throws InformationNonConformeException {
+        // TODO : Implémenter la démodulation RZ
+    }
+    
+    
+    public void demodulation() throws InformationNonConformeException{
+    	this.nbElementRecue = informationRecue.nbElements(); // le this. n'est pas très utile ici
+    	
+    	if(nbElementRecue == 0) {
+    		throw new InformationNonConformeException("L'information ne peut pas être vide");
+    	}
+    	
+    	switch (modulation) {
+        case "RZ" :
+        	demodulerRZ();
+        	break;
+        	
+        case "NRZ" :
+        	demodulerNRZ();
+        	break;
+        	
+        case "NRZT" :
+        	demodulerNRZT();
+        	break;
+    }
+    }
+    
+    
+    /**
+     * Reçoit les informations modulées, effectue la démodulation en fonction
+     * du type de modulation choisi, et émet l'information démoulée.
+     * 
+     * @param information l'information reçue sous forme d'une liste de valeurs float
+     * @throws InformationNonConformeException si les informations reçues sont incohérentes ou malformées
+     */
+    @Override
+    public void recevoir(Information<Float> information) throws InformationNonConformeException {
+        for (Float i : information) {
             informationRecue.add(i);
         }
-		
-		demodulation();
+        
+        demodulation();
         emettre();
-	}
+    }
 
-	@Override
-	public void emettre() throws InformationNonConformeException {
-		for (DestinationInterface<Boolean> destinationConnectee : destinationsConnectees) {
+    /**
+     * Émet l'information démodulée vers les destinations connectées.
+     * 
+     * @throws InformationNonConformeException si une erreur survient lors de l'émission
+     */
+    @Override
+    public void emettre() throws InformationNonConformeException {
+        for (DestinationInterface<Boolean> destinationConnectee : destinationsConnectees) {
             destinationConnectee.recevoir(informationEmise);
-        }		
-	}
-
+        }        
+    }
 }
