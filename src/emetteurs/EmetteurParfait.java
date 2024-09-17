@@ -46,10 +46,13 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
      * @param modulation Le type de modulation utilisé (NRZ, NRZT, ou RZ).
      * @throws InformationNonConformeException Si les valeurs d'amplitude ou le type de modulation sont invalides.
      */
+    
+    
     public EmetteurParfait(float Amax, float Amin, int facteurDEchantillonage, String modulation) throws InformationNonConformeException {
         super();
-        informationRecue = new Information<>();
-        informationEmise = new Information<>();
+        informationRecue = new Information<Boolean>();
+        informationEmise = new Information<Float>();
+
 
         this.facteurDEchantillonage = facteurDEchantillonage;
         this.modulation = modulation;
@@ -91,9 +94,9 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
      */
     public EmetteurParfait(int facteurDEchantillonage, String modulation) throws InformationNonConformeException {
         super();
-        informationRecue = new Information<>();
-        informationEmise = new Information<>();
-
+        informationRecue = new Information<Boolean>();
+        informationEmise = new Information<Float>();
+        
         this.facteurDEchantillonage = facteurDEchantillonage;
         this.modulation = modulation;
 
@@ -183,7 +186,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     @Override
     public void emettre() throws InformationNonConformeException {
     	for (DestinationInterface<Float> destinationConnectee : destinationsConnectees) {
-            destinationConnectee.recevoir(informationRecue);
+            destinationConnectee.recevoir(informationEmise);
         }
     }
 }

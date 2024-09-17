@@ -2,7 +2,9 @@ package simulateur;
 
 import sources.*;
 import destinations.*;
+import emetteurs.*;
 import transmetteurs.*;
+import recepteur.*;
 import visualisations.*;
 import information.*;
 
@@ -32,13 +34,12 @@ public class Simulateur {
     
     /** la chaîne de caractères correspondant à m dans l'argument -mess m */
     private String messageString = "100";
+    
+    private Boolean analogique = false;
    
    	
     /** le  composant Source de la chaine de transmission */
     private Source <Boolean>  source = null;
-    
-    /** le  composant Transmetteur parfait logique de la chaine de transmission */
-    private Transmetteur <Boolean, Boolean>  transmetteurLogique = null;
     
     /** le  composant Destination de la chaine de transmission */
     private Destination <Boolean>  destination = null;
@@ -53,44 +54,77 @@ public class Simulateur {
      * @param args le tableau des différents arguments.
      *
      * @throws ArgumentsException si un des arguments est incorrect
+     * @throws InformationNonConformeException 
      *
      */   
-    public  Simulateur(String [] args) throws ArgumentsException {
+    public  Simulateur(String [] args) throws ArgumentsException, InformationNonConformeException {
     	// analyser et récupérer les arguments   	
     	analyseArguments(args);
       
-      	// TODO : Partie à compléter
+
 
      // Création des composants de la chaîne
-    	if(messageAleatoire) {
-    		source = new SourceAleatoire(nbBitsMess);  // Crée la source fixe avec un message prédéfini
+    	// Création d'une source aléatoire ou pas
+    	if(messageAleatoire) {source = new SourceAleatoire(nbBitsMess);} 
+    	else if(aleatoireAvecGerme){source = new SourceAleatoire(nbBitsMess, seed);}
+    	else {source = new SourceFixe(messageString);}
+    	
+    	// Crée une destination pour recevoir l'information émise par le transmetteur elle ne change jamais
+        destination = new DestinationFinale();
+        
+        
+        
+        //choix du type de simulateur en fonction de l'avancement du projet
+        if (!(analogique)) {simulateurParfait();}
+        else simulateurAnalogiqueParfait();
     	}
-    	else if(aleatoireAvecGerme){
-    		source = new SourceAleatoire(nbBitsMess, seed);
-    	}
-    	else {
-    		source = new SourceFixe(messageString);
-    	}
+    
+    
         
-        
-        // Instanciation du TransmetteurParfait (sans génériques ici)
-        transmetteurLogique = new TransmetteurParfait();
-        
-        // Crée une destination pour recevoir l'information émise par le transmetteur
-         destination = new DestinationFinale();
-        
-        // Connecter la source au transmetteur
-        source.connecter(transmetteurLogique);
+        private void simulateurParfait(){
+        	// cas d'une transmition parfaite en binaire
+        	
+        	// Instanciation du TransmetteurParfait (sans génériques ici)
+            Transmetteur <Boolean, Boolean>  transmetteurLogique = null;
+            transmetteurLogique = new TransmetteurParfait();
+            
+            // Connecter la source au transmetteur
+            source.connecter(transmetteurLogique);
 
-        // Connecter le transmetteur à la destination
-        transmetteurLogique.connecter(destination);      
-        
-        if(affichage) {
-            source.connecter(new SondeLogique("Source", 200));
-            transmetteurLogique.connecter(new SondeLogique("Transmetteur", 200));
+            // Connecter le transmetteur à la destination
+            transmetteurLogique.connecter(destination); 
+
+            
+            if(affichage) {
+            	source.connecter(new SondeLogique("Source", 200));
+            	transmetteurLogique.connecter(new SondeLogique("Transmetteur", 200));
+            }
         }
         
-    }
+        private void simulateurAnalogiqueParfait() throws InformationNonConformeException{
+        	// cas d'une transmition parfaite en float, analogique
+        	Emetteur<Boolean,Float> emetteurParfait  = null;
+        	Transmetteur <Float, Float>  transmetteurAnalogiqueParfait = null;
+        	Recepteur<Float,Boolean> recepteurParfait = null ;
+        	
+        	emetteurParfait = new EmetteurParfait(5f, 0, 3, "NRZ");
+        	transmetteurAnalogiqueParfait = new TransmetteurAnalogiqueParfait();
+        	recepteurParfait = new RecepteurParfait(5f, 0, 3, "NRZ");
+        	
+        	source.connecter(emetteurParfait);
+        	emetteurParfait.connecter(transmetteurAnalogiqueParfait);
+        	transmetteurAnalogiqueParfait.connecter(recepteurParfait);
+        	recepteurParfait.connecter(destination);
+        	
+        	if(affichage) {
+            	source.connecter(new SondeLogique("Source", 200));
+            	emetteurParfait.connecter(new SondeAnalogique("Emetteur"));
+            	transmetteurAnalogiqueParfait.connecter(new SondeAnalogique("Transmetteur"));
+            	recepteurParfait.connecter(new SondeLogique("Recepteur", 200));
+
+            }    
+        }
+ 
    
    
    
@@ -150,7 +184,9 @@ public class Simulateur {
     				throw new ArgumentsException("Valeur du parametre -mess invalide : " + args[i]);
     		}
     		
-    		//TODO : ajouter ci-après le traitement des nouvelles options
+    			else if (args[i].matches("-analog")){
+    				analogique = true;
+    			}
 
     		else throw new ArgumentsException("Option invalide :"+ args[i]);
     	}
