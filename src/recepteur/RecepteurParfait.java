@@ -28,7 +28,7 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         }
 	}
 	
-	public RecepteurParfait(int facteurDEchantillonnage, String modulation, float Amax, float Amin) {
+	public RecepteurParfait(float Amax, float Amin, int facteurDEchantillonage, String modulation) {
 		super();
 		informationRecue = new Information<>();
         informationEmise = new Information<>();
