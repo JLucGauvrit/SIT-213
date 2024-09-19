@@ -35,7 +35,7 @@ public class Simulateur {
     /** la chaîne de caractères correspondant à m dans l'argument -mess m */
     private String messageString = "100";
     
-    private Boolean analogique = false;
+    private Boolean form = false;
    
    	
     /** le  composant Source de la chaine de transmission */
@@ -82,7 +82,7 @@ public class Simulateur {
         
         
         //choix du type de simulateur en fonction de l'avancement du projet
-        if (!(analogique)) {simulateurParfait();}
+        if (!(form)) {simulateurParfait();}
         else simulateurAnalogiqueParfait();
     	}
     
@@ -125,8 +125,8 @@ public class Simulateur {
         	
         	if(affichage) {
             	source.connecter(new SondeLogique("Source", 200));
-            	emetteurParfait.connecter(new SondeAnalogique("Emetteur"));
-            	transmetteurAnalogiqueParfait.connecter(new SondeAnalogique("Transmetteur"));
+            	emetteurParfait.connecter(new SondeAnalogique("Emetteur", 100));
+            	transmetteurAnalogiqueParfait.connecter(new SondeAnalogique("Transmetteur", 100));
             	recepteurParfait.connecter(new SondeLogique("Recepteur", 200));
 
             }    
@@ -186,11 +186,9 @@ public class Simulateur {
                         throw new ArgumentsException("Valeur du parametre -mess invalide : " + args[i]);
                 }
 
-                else if (args[i].matches("-analog")) {
-                    analogique = true;
-                }
 
-                else if (args[i].matches("-mod")) {
+                else if (args[i].matches("-form")) {
+                	form = true;
                     i++;
                     // Vérifier si le mode de modulation est valide
                     if (args[i].equals("RZ") || args[i].equals("NRZ") || args[i].equals("NRZT")) {
@@ -234,7 +232,7 @@ public class Simulateur {
 
         int erreurs = 0;
         for (int i = 0; i < emise.nbElements(); i++) {
-            if (!emise.iemeElement(i).equals(recue.iemeElement(i))) {
+            if (!(emise.iemeElement(i)).equals(recue.iemeElement(i))) {
                 erreurs++;
             }
         }
@@ -276,4 +274,5 @@ public class Simulateur {
     	}              	
     }
 }
+
 

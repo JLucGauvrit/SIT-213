@@ -31,6 +31,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     private float Amin;
     private float Amax;
     private int nbElementRecue;
+    private int facteurDEchantillonage ;
 
     /**
      * Constructeur de la classe EmetteurParfait qui initialise les paramètres de modulation,
@@ -49,6 +50,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
         informationEmise = new Information<Float>();
 
         this.modulation = modulation;
+        this.facteurDEchantillonage = facteurDEchantillonage;
 
         // Validation des amplitudes d'entrée en fonction de la modulation
         if (Amax < 0) {
@@ -150,12 +152,17 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     }
 
     private void modulerNRZ() {
-    	for(Boolean i : informationRecue) {
-    		if(i.booleanValue()) {
-    			informationEmise.add(Amax);
+    	for(Boolean info : informationRecue) {
+    		if(info) {
+    			for (int j=0; j<facteurDEchantillonage; j++) {
+    				informationEmise.add(Amax);
+    			}
     		}
-    		else {    
-    			informationEmise.add(Amin);
+
+    		else if(!(info)) {    
+    			for (int j=0; j<facteurDEchantillonage; j++) {
+    				informationEmise.add(Amin);
+    			}
     		}
     	}
 	}

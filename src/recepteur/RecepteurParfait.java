@@ -112,6 +112,29 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         this.Amax = Amax;
         this.esperance = (this.Amax + this.Amin) / 2;
     }
+    
+    
+    public void demodulation() throws InformationNonConformeException{
+    	this.nbElementRecue = informationRecue.nbElements();
+    	
+    	if(nbElementRecue == 0) {
+    		throw new InformationNonConformeException("L'information ne peut pas être vide");
+    	}
+    	
+    	switch (modulation) {
+        case "RZ" :
+        	demodulerRZ();
+        	break;
+        	
+        case "NRZ" :
+        	demodulerNRZ();
+        	break;
+        	
+        case "NRZT" :
+        	demodulerNRZT();
+        	break;
+    }
+    }
 
     /**
      * Méthode pour démoduler les signaux en utilisant la modulation NRZT.
@@ -200,32 +223,6 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         }
     }
     
-    /**
-     * Démodule les informations reçues en fonction de la modulation choisie.
-     * 
-     * @throws InformationNonConformeException si l'information reçue est vide
-     */
-    public void demodulation() throws InformationNonConformeException {
-        this.nbElementRecue = informationRecue.nbElements();
-        
-        if (nbElementRecue == 0) {
-            throw new InformationNonConformeException("L'information ne peut pas être vide");
-        }
-        
-        switch (modulation) {
-        case "RZ" :
-            demodulerRZ();
-            break;
-            
-        case "NRZ" :
-            demodulerNRZ();
-            break;
-            
-        case "NRZT" :
-            demodulerNRZT();
-            break;
-        }
-    }
     
     /**
      * Reçoit les informations modulées, effectue la démodulation en fonction
