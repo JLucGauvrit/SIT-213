@@ -30,9 +30,8 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
      */
     private String modulation = "NRZ";
     
-    private int nbElementRecue;
     private float esperance;
-
+    
     /**
      * Constructeur du RecepteurParfait qui initialise les paramètres par défaut de Amax et Amin
      * en fonction de la modulation choisie.
@@ -114,114 +113,6 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
     }
     
     
-    public void demodulation() throws InformationNonConformeException{
-    	this.nbElementRecue = informationRecue.nbElements();
-    	
-    	if(nbElementRecue == 0) {
-    		throw new InformationNonConformeException("L'information ne peut pas être vide");
-    	}
-    	
-    	switch (modulation) {
-        case "RZ" :
-        	demodulerRZ();
-        	break;
-        	
-        case "NRZ" :
-        	demodulerNRZ();
-        	break;
-        	
-        case "NRZT" :
-        	demodulerNRZT();
-        	break;
-    }
-    }
-
-    /**
-     * Méthode pour démoduler les signaux en utilisant la modulation NRZT.
-     * 
-     * @throws InformationNonConformeException si une erreur survient lors de la démodulation
-     */
-    public void demodulerNRZT() throws InformationNonConformeException {
-        int nbBits = informationRecue.nbElements() / nbElementRecue;
-        int nbEchantillon = nbElementRecue / facteurDEchantillonnage;
-        float somme = 0;
-        int i = 0, j = 0;
-
-        for (Float f : informationRecue) {
-            j++;
-            // Calcul de la somme selon les conditions
-            if ((i == 0 && j > nbEchantillon) || (i == nbBits - 1 && j < 2 * nbEchantillon) || (i > 0 && i < nbBits - 1)) {
-                somme += f;
-            }
-
-            // Démodulation dès que l'échantillon est complet
-            if (j == nbElementRecue) {
-                boolean isOne = (i == 0 || i == nbBits - 1) 
-                                ? (somme / (2 * nbEchantillon) > esperance) 
-                                : (somme / nbElementRecue > esperance);
-
-                informationEmise.add(isOne);
-
-                i++;
-                j = 0;
-                somme = 0;
-            }
-        }
-    }
-
-    /**
-     * Méthode pour démoduler les signaux en utilisant la modulation NRZ.
-     * 
-     * @throws InformationNonConformeException si une valeur incohérente est détectée dans les informations reçues
-     */
-    public void demodulerNRZ() throws InformationNonConformeException {
-        int nbElementEmis = nbElementRecue;
-        
-        for (int i = 0; i < nbElementEmis; i++) {
-            if (informationRecue.iemeElement(i) >= Amax) {
-                informationEmise.add(true);
-            } else if (informationRecue.iemeElement(i) <= Amin) {
-                informationEmise.add(false);
-            } else {
-                // Si la valeur reçue est incohérente, on lance une exception
-                throw new InformationNonConformeException("Valeur incohérente dans informationRecue");
-            }
-        }
-    }
-
-    /**
-     * Méthode pour démoduler les signaux en utilisant la modulation RZ.
-     * 
-     * @throws InformationNonConformeException si une erreur survient lors de la démodulation
-     */
-    public void demodulerRZ() throws InformationNonConformeException {
-        int nbBits = informationRecue.nbElements() / nbElementRecue;
-        int nbEchantillon = nbElementRecue / 3;
-        float somme = 0;
-        int i = 0, j = 0;
-
-        for (Float f : informationRecue) {
-            j++;
-
-            // Calcul de la somme selon les conditions
-            if ((i == 0 && j > nbEchantillon) || (i == nbBits - 1 && j < 2 * nbEchantillon) || (i > 0 && i < nbBits - 1)) {
-                somme += f;
-            }
-
-            // Démodulation dès que l'échantillon est complet
-            if (j == nbElementRecue) {
-                boolean isOne = (i == 0 || i == nbBits - 1) 
-                                ? (somme / (2 * nbEchantillon) > esperance) 
-                                : (somme / nbElementRecue > esperance);
-
-                informationEmise.add(isOne);
-
-                i++;
-                j = 0;
-                somme = 0;
-            }
-        }
-    }
     
     
     /**
@@ -241,7 +132,47 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         emettre();
     }
 
-    /**
+    private void demodulation() throws InformationNonConformeException{
+    	switch (modulation) {
+		case "NRZ":
+			toBoolean((Amax+Amin)/2);
+			break;
+			
+		case "NRZT":
+			toBoolean((Amax+Amin)/2);
+			break;
+			
+		case "RZ":
+			toBoolean((Amax)/4);
+			break;
+
+		default:
+			throw new InformationNonConformeException("Aucun type d'encodage ne correspond a l'entrée saisie");
+		}
+		
+	}
+
+	private void toBoolean(float seuil) {
+	    float somme = 0;
+	    int nbEchantillons = facteurDEchantillonnage; // nombre d'échantillons par bit
+
+	    // Boucle à travers l'information reçue, par pas de nbEchantillons
+	    for (int i = 0; i < informationRecue.nbElements(); i += nbEchantillons) {
+	        somme = 0;
+
+	        // Calcul de la somme des échantillons pour chaque bit
+	        for (int j = i; j < i + nbEchantillons && j < informationRecue.nbElements(); j++) {
+	            somme += informationRecue.iemeElement(j);
+	        }
+
+	        // Calcul de la moyenne et ajout du résultat converti en booléen
+	        float moyenne = somme / nbEchantillons;
+	        informationEmise.add(moyenne > seuil);
+	    }
+		
+	}
+
+	/**
      * Émet l'information démodulée vers les destinations connectées.
      * 
      * @throws InformationNonConformeException si une erreur survient lors de l'émission
