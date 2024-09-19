@@ -32,6 +32,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     private float Amax;
     private int nbElementRecue;
     private int facteurDEchantillonage ;
+	private Information<Float> informationConverti=new Information<>();
 
     /**
      * Constructeur de la classe EmetteurParfait qui initialise les paramètres de modulation,
@@ -151,7 +152,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     	}
     }
 
-    private void modulerNRZ() {
+    private void modulerNRZ() { 
     	for(Boolean info : informationRecue) {
     		if(info) {
     			for (int j=0; j<facteurDEchantillonage; j++) {
@@ -167,21 +168,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     	}
 	}
 
-	private void modulerNRZT() {
-		for(Boolean i : informationRecue) {
-			if(i.booleanValue()) {
-				informationEmise.add(Amax/2);
-    			informationEmise.add(Amax);
-    			informationEmise.add(Amax/2);
-    		}
-    		else {    
-    			informationEmise.add(Amin/2);
-    			informationEmise.add(Amin);
-    			informationEmise.add(Amin/2);
-    		}
-		}
-		
-	}
+   
 
 	private void modulerRZ() {
 		for(Boolean i : informationRecue) {
@@ -196,8 +183,198 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     			informationEmise.add(Amin);
     		}
 		}
-		
 	}
+	
+	
+	private void modulerNRZT() {
+		float moy=(Amax+Amin)/2;
+        int divTrois = facteurDEchantillonage / 3;
+        float quantum = (Amax-moy) / divTrois;
+        int nbElem=informationRecue.nbElements();
+        boolean checkAfter = false;
+        boolean checkBefore = false;
+        checkAfter = informationRecue.iemeElement(1);
+        
+
+        if (informationRecue.iemeElement(0)) {
+            if (!checkAfter){
+            for (int j = 0; j < divTrois; j++) {
+                informationConverti.add(moy+(quantum * j));
+            }
+            for (int j = 0; j < divTrois; j++) {
+                informationConverti.add(Amax);
+            }
+            for (int j = 0; j < divTrois; j++) {
+                informationConverti.add(Amax -(quantum* j));
+            }
+            }
+            else{
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(moy+(quantum * j));
+                }
+                for (int j = 0; j < 2* divTrois; j++) {
+                    informationConverti.add(Amax);
+                }
+            }
+        }
+        else {
+            if (checkAfter){
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(moy-(quantum * j));
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amin);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amin+(quantum * j));
+                }
+            }
+            else{
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(moy-(quantum * j));
+                }
+                for (int j = 0; j < 2* divTrois; j++) {
+                    informationConverti.add(Amin);
+                }
+            }
+        }
+
+        for (int i = 1; i < nbElem-1; i++) {
+        	
+        	//bit suivant
+            checkAfter = informationRecue.iemeElement(i + 1);
+            //bit precedent
+            checkBefore = informationRecue.iemeElement(i - 1);
+
+            if (informationRecue.iemeElement(i)) {
+                if (!checkAfter && !checkBefore) {
+
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(moy+(quantum * j));
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amax);
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amax - (quantum * j));
+                    }
+                }
+
+                else if (checkAfter && checkBefore) {
+                    for (int j = 0; j < facteurDEchantillonage; j++) {
+                        informationConverti.add(Amax);
+                    }
+                }
+
+                else if (checkAfter && !checkBefore) {
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(moy+(quantum * j));
+                    }
+                    for (int j = 0; j < 2 * divTrois; j++) {
+                        informationConverti.add(Amax);
+                    }
+                }
+
+                else {
+
+                    for (int j = 0; j < 2 * divTrois; j++) {
+                        informationConverti.add(Amax);
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amax - (quantum * j));
+                    }
+                }
+
+            }
+            else {
+
+                if (checkAfter && checkBefore) {
+
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(moy-(quantum * j));
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amin);
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amin + (quantum * j));
+                    }
+
+                }
+
+                else if (!checkAfter && !checkBefore) {
+                    for (int j = 0; j < facteurDEchantillonage; j++) {
+                        informationConverti.add(Amin);
+                    }
+
+                }
+
+                else if (!checkAfter && checkBefore) {
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(moy-(quantum * j));
+                    }
+                    for (int j = 0; j < 2 * divTrois; j++) {
+                        informationConverti.add(Amin);
+                    }
+                }
+
+                else  {
+                    for (int j = 0; j < 2 * divTrois; j++) {
+                        informationConverti.add(Amin);
+                    }
+                    for (int j = 0; j < divTrois; j++) {
+                        informationConverti.add(Amin + (quantum * j));
+                    }
+                }
+            }
+        }
+
+        checkBefore = informationRecue.iemeElement(nbElem-2);;
+        if (informationRecue.iemeElement(nbElem-1)) {
+            if (!checkBefore){
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(moy+(quantum * j));
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amax);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amax - (quantum * j));
+                }
+            }
+            else{
+
+                for (int j = 0; j < 2* divTrois; j++) {
+                    informationConverti.add(Amax);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amax-(quantum * j));
+                }
+            }
+        }
+        else {
+            if (checkBefore){
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(moy-(quantum * j));
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amin);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amin + (quantum * j));
+                }
+            }
+            else{
+
+                for (int j = 0; j < 2* divTrois; j++) {
+                    informationConverti.add(Amin);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                    informationConverti.add(Amin+(quantum * j));
+                }
+            }
+        }
+    }
 
 	/**
      * Emet l'information modulée sous forme d'un signal analogique.
