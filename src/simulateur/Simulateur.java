@@ -125,8 +125,8 @@ public class Simulateur {
         	
         	if(affichage) {
             	source.connecter(new SondeLogique("Source", 200));
-            	emetteurParfait.connecter(new SondeAnalogique("Emetteur"));
-            	transmetteurAnalogiqueParfait.connecter(new SondeAnalogique("Transmetteur"));
+            	emetteurParfait.connecter(new SondeAnalogique("Emetteur", 100));
+            	transmetteurAnalogiqueParfait.connecter(new SondeAnalogique("Transmetteur", 100));
             	recepteurParfait.connecter(new SondeLogique("Recepteur", 200));
 
             }    
@@ -232,14 +232,8 @@ public class Simulateur {
 
         int erreurs = 0;
         for (int i = 0; i < emise.nbElements(); i++) {
-        	System.out.println(emise.iemeElement(i));
-        	System.out.println(recue.iemeElement(i));
             if (!(emise.iemeElement(i)).equals(recue.iemeElement(i))) {
                 erreurs++;
-                System.out.println("error");
-            }
-            else {
-                System.out.println("OK");
             }
         }
         return (float) erreurs / emise.nbElements();
@@ -280,4 +274,5 @@ public class Simulateur {
     	}              	
     }
 }
+
 
