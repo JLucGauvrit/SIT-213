@@ -32,7 +32,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     private float Amax;
     private int nbElementRecue;
     private int facteurDEchantillonage ;
-	private Information<Float> informationConverti=new Information<>();
+
 
     /**
      * Constructeur de la classe EmetteurParfait qui initialise les paramètres de modulation,
@@ -95,21 +95,6 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
         
         this.modulation = modulation;
 
-        switch (modulation) {
-            case "NRZT":
-            case "NRZ":
-                this.Amin = -5;
-                break;
-
-            case "RZ":
-                this.Amin = 0;
-                break;
-
-            default:
-                throw new InformationNonConformeException("Nom de modulation invalide");
-        }
-
-        this.Amax = 5;
     }
 
     /**
@@ -170,20 +155,31 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
 
    
 
-	private void modulerRZ() {
-		for(Boolean i : informationRecue) {
-			if(i.booleanValue()) {
-				informationEmise.add(Amin);
-    			informationEmise.add(Amax);
-    			informationEmise.add(Amin);
-    		}
-    		else {    
-    			informationEmise.add(Amin);
-    			informationEmise.add(Amin);
-    			informationEmise.add(Amin);
-    		}
-		}
-	}
+    private void modulerRZ() {
+
+        int divTrois = facteurDEchantillonage / 3;
+
+        for (Boolean recu : informationRecue) {
+            if (recu) { // Ajoute Amax pendant T/3 entoure de 0
+                for (int j = 0; j < divTrois; j++) {
+                	informationEmise.add(Amin);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                	informationEmise.add(Amax);
+                }
+                for (int j = 0; j < divTrois; j++) {
+                	informationEmise.add(Amin);
+                }
+
+            }
+            if (!recu) {
+                for (int j = 0; j < facteurDEchantillonage; j++) {
+                	informationEmise.add(Amin);
+                }
+
+            }
+        }
+    }
 	
 	
 	private void modulerNRZT() {
@@ -195,46 +191,46 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
         boolean checkBefore = false;
         checkAfter = informationRecue.iemeElement(1);
         
-
+        
         if (informationRecue.iemeElement(0)) {
             if (!checkAfter){
             for (int j = 0; j < divTrois; j++) {
-                informationConverti.add(moy+(quantum * j));
+            	informationEmise.add(moy+(quantum * j));
             }
             for (int j = 0; j < divTrois; j++) {
-                informationConverti.add(Amax);
+            	informationEmise.add(Amax);
             }
             for (int j = 0; j < divTrois; j++) {
-                informationConverti.add(Amax -(quantum* j));
+                informationEmise.add(Amax -(quantum* j));
             }
             }
             else{
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(moy+(quantum * j));
+                    informationEmise.add(moy+(quantum * j));
                 }
                 for (int j = 0; j < 2* divTrois; j++) {
-                    informationConverti.add(Amax);
+                    informationEmise.add(Amax);
                 }
             }
         }
         else {
             if (checkAfter){
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(moy-(quantum * j));
+                    informationEmise.add(moy-(quantum * j));
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amin);
+                    informationEmise.add(Amin);
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amin+(quantum * j));
+                    informationEmise.add(Amin+(quantum * j));
                 }
             }
             else{
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(moy-(quantum * j));
+                    informationEmise.add(moy-(quantum * j));
                 }
                 for (int j = 0; j < 2* divTrois; j++) {
-                    informationConverti.add(Amin);
+                    informationEmise.add(Amin);
                 }
             }
         }
@@ -250,38 +246,38 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
                 if (!checkAfter && !checkBefore) {
 
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(moy+(quantum * j));
+                        informationEmise.add(moy+(quantum * j));
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amax);
+                        informationEmise.add(Amax);
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amax - (quantum * j));
+                        informationEmise.add(Amax - (quantum * j));
                     }
                 }
 
                 else if (checkAfter && checkBefore) {
                     for (int j = 0; j < facteurDEchantillonage; j++) {
-                        informationConverti.add(Amax);
+                        informationEmise.add(Amax);
                     }
                 }
 
                 else if (checkAfter && !checkBefore) {
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(moy+(quantum * j));
+                        informationEmise.add(moy+(quantum * j));
                     }
                     for (int j = 0; j < 2 * divTrois; j++) {
-                        informationConverti.add(Amax);
+                        informationEmise.add(Amax);
                     }
                 }
 
                 else {
 
                     for (int j = 0; j < 2 * divTrois; j++) {
-                        informationConverti.add(Amax);
+                        informationEmise.add(Amax);
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amax - (quantum * j));
+                        informationEmise.add(Amax - (quantum * j));
                     }
                 }
 
@@ -291,39 +287,39 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
                 if (checkAfter && checkBefore) {
 
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(moy-(quantum * j));
+                        informationEmise.add(moy-(quantum * j));
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amin);
+                        informationEmise.add(Amin);
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amin + (quantum * j));
+                        informationEmise.add(Amin + (quantum * j));
                     }
 
                 }
 
                 else if (!checkAfter && !checkBefore) {
                     for (int j = 0; j < facteurDEchantillonage; j++) {
-                        informationConverti.add(Amin);
+                        informationEmise.add(Amin);
                     }
 
                 }
 
                 else if (!checkAfter && checkBefore) {
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(moy-(quantum * j));
+                        informationEmise.add(moy-(quantum * j));
                     }
                     for (int j = 0; j < 2 * divTrois; j++) {
-                        informationConverti.add(Amin);
+                        informationEmise.add(Amin);
                     }
                 }
 
                 else  {
                     for (int j = 0; j < 2 * divTrois; j++) {
-                        informationConverti.add(Amin);
+                        informationEmise.add(Amin);
                     }
                     for (int j = 0; j < divTrois; j++) {
-                        informationConverti.add(Amin + (quantum * j));
+                        informationEmise.add(Amin + (quantum * j));
                     }
                 }
             }
@@ -333,44 +329,44 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
         if (informationRecue.iemeElement(nbElem-1)) {
             if (!checkBefore){
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(moy+(quantum * j));
+                    informationEmise.add(moy+(quantum * j));
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amax);
+                    informationEmise.add(Amax);
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amax - (quantum * j));
+                    informationEmise.add(Amax - (quantum * j));
                 }
             }
             else{
 
                 for (int j = 0; j < 2* divTrois; j++) {
-                    informationConverti.add(Amax);
+                    informationEmise.add(Amax);
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amax-(quantum * j));
+                    informationEmise.add(Amax-(quantum * j));
                 }
             }
         }
         else {
             if (checkBefore){
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(moy-(quantum * j));
+                    informationEmise.add(moy-(quantum * j));
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amin);
+                    informationEmise.add(Amin);
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amin + (quantum * j));
+                    informationEmise.add(Amin + (quantum * j));
                 }
             }
             else{
 
                 for (int j = 0; j < 2* divTrois; j++) {
-                    informationConverti.add(Amin);
+                    informationEmise.add(Amin);
                 }
                 for (int j = 0; j < divTrois; j++) {
-                    informationConverti.add(Amin+(quantum * j));
+                    informationEmise.add(Amin+(quantum * j));
                 }
             }
         }
