@@ -43,7 +43,14 @@ public class Simulateur {
     
     /** le  composant Destination de la chaine de transmission */
     private Destination <Boolean>  destination = null;
+    
+    private String modulation = "NRZ";
+    
+    private float Amin = -5;
+    
+    private float Amax = 5;
    	
+    private int facteurDEchantillonnage = 3;
    
     /** Le constructeur de Simulateur construit une chaîne de
      * transmission composée d'une Source <Boolean>, d'une Destination
@@ -107,9 +114,9 @@ public class Simulateur {
         	Transmetteur <Float, Float>  transmetteurAnalogiqueParfait = null;
         	Recepteur<Float,Boolean> recepteurParfait = null ;
         	
-        	emetteurParfait = new EmetteurParfait(5f, 0, 3, "NRZ");
+        	emetteurParfait = new EmetteurParfait(Amax, Amin, facteurDEchantillonnage, modulation);
         	transmetteurAnalogiqueParfait = new TransmetteurAnalogiqueParfait();
-        	recepteurParfait = new RecepteurParfait(5f, 0, 3, "NRZ");
+        	recepteurParfait = new RecepteurParfait(Amax, Amin, facteurDEchantillonnage, modulation);
         	
         	source.connecter(emetteurParfait);
         	emetteurParfait.connecter(transmetteurAnalogiqueParfait);
@@ -128,70 +135,75 @@ public class Simulateur {
    
    
    
-    /** La méthode analyseArguments extrait d'un tableau de chaînes de
-     * caractères les différentes options de la simulation.  <br>Elle met
-     * à jour les attributs correspondants du Simulateur.
-     *
-     * @param args le tableau des différents arguments.
-     * <br>
-     * <br>Les arguments autorisés sont : 
-     * <br> 
-     * <dl>
-     * <dt> -mess m  </dt><dd> m (String) constitué de 7 ou plus digits à 0 | 1, le message à transmettre</dd>
-     * <dt> -mess m  </dt><dd> m (int) constitué de 1 à 6 digits, le nombre de bits du message "aléatoire" à transmettre</dd> 
-     * <dt> -s </dt><dd> pour demander l'utilisation des sondes d'affichage</dd>
-     * <dt> -seed v </dt><dd> v (int) d'initialisation pour les générateurs aléatoires</dd> 
-     * </dl>
-     *
-     * @throws ArgumentsException si un des arguments est incorrect.
-     *
-     */   
-    private  void analyseArguments(String[] args)  throws  ArgumentsException {
+        /**
+         * Analyse les arguments de simulation et met à jour les attributs du simulateur.
+         * 
+         * Arguments supportés :
+         * <ul>
+         *   <li><b>-mess m</b> : Chaîne binaire (7+ caractères) ou entier (1-6 chiffres) pour définir le message.</li>
+         *   <li><b>-s</b> : Active l'affichage des sondes.</li>
+         *   <li><b>-seed v</b> : Initialise les générateurs aléatoires avec la valeur v.</li>
+         *   <li><b>-mod m</b> : Mode de modulation (RZ, NRZ, NRZT).</li>
+         *   <li><b>-analog</b> : Active le mode analogique.</li>
+         * </ul>
+         * 
+         * @param args Les arguments de simulation.
+         * @throws ArgumentsException Si un argument est incorrect.
+         */
 
-    	for (int i=0;i<args.length;i++){ // traiter les arguments 1 par 1
+    private void analyseArguments(String[] args) throws ArgumentsException {
 
-    		if (args[i].matches("-s")){
-    			affichage = true;
-    		}
-    		
-    		else if (args[i].matches("-seed")) {
-    			aleatoireAvecGerme = true;
-    			i++; 
-    			// traiter la valeur associee
-    			try { 
-    				seed = Integer.valueOf(args[i]);
-    			}
-    			catch (Exception e) {
-    				throw new ArgumentsException("Valeur du parametre -seed  invalide :" + args[i]);
-    			}           		
-    		}
+            for (int i = 0; i < args.length; i++) { // traiter les arguments un par un
 
-    		else if (args[i].matches("-mess")){
-    			i++; 
-    			// traiter la valeur associee
-    			messageString = args[i];
-    			if (args[i].matches("[0,1]{7,}")) { // au moins 7 digits
-    				messageAleatoire = false;
-    				nbBitsMess = args[i].length();
-    			} 
-    			else if (args[i].matches("[0-9]{1,6}")) { // de 1 à 6 chiffres
-    				messageAleatoire = true;
-    				nbBitsMess = Integer.valueOf(args[i]);
-    				if (nbBitsMess < 1) 
-    					throw new ArgumentsException ("Valeur du parametre -mess invalide : " + nbBitsMess);
-    			}
-    			else 
-    				throw new ArgumentsException("Valeur du parametre -mess invalide : " + args[i]);
-    		}
-    		
-    			else if (args[i].matches("-analog")){
-    				analogique = true;
-    			}
+                if (args[i].matches("-s")) {
+                    affichage = true;
+                }
 
-    		else throw new ArgumentsException("Option invalide :"+ args[i]);
-    	}
-      
-    }
+                else if (args[i].matches("-seed")) {
+                    aleatoireAvecGerme = true;
+                    i++;
+                    // traiter la valeur associée
+                    try {
+                        seed = Integer.valueOf(args[i]);
+                    } catch (Exception e) {
+                        throw new ArgumentsException("Valeur du parametre -seed invalide : " + args[i]);
+                    }
+                }
+
+                else if (args[i].matches("-mess")) {
+                    i++;
+                    // traiter la valeur associée
+                    messageString = args[i];
+                    if (args[i].matches("[0,1]{7,}")) { // au moins 7 digits
+                        messageAleatoire = false;
+                        nbBitsMess = args[i].length();
+                    } else if (args[i].matches("[0-9]{1,6}")) { // de 1 à 6 chiffres
+                        messageAleatoire = true;
+                        nbBitsMess = Integer.valueOf(args[i]);
+                        if (nbBitsMess < 1)
+                            throw new ArgumentsException("Valeur du parametre -mess invalide : " + nbBitsMess);
+                    } else
+                        throw new ArgumentsException("Valeur du parametre -mess invalide : " + args[i]);
+                }
+
+                else if (args[i].matches("-analog")) {
+                    analogique = true;
+                }
+
+                else if (args[i].matches("-mod")) {
+                    i++;
+                    // Vérifier si le mode de modulation est valide
+                    if (args[i].equals("RZ") || args[i].equals("NRZ") || args[i].equals("NRZT")) {
+                        modulation = args[i];
+                    } else {
+                        throw new ArgumentsException("Option de modulation invalide : " + args[i]);
+                    }
+                }
+
+                else throw new ArgumentsException("Option invalide : " + args[i]);
+            }
+        }
+
      
     
    	
