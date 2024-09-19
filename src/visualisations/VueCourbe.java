@@ -52,7 +52,7 @@ public class VueCourbe  extends Vue {
     }
    
    
-    public  VueCourbe (float [] valeurs, String nom) {   
+    public  VueCourbe (float [] valeurs, int nbPixels, String nom) {   
        
 	super(nom);      
       
@@ -73,7 +73,7 @@ public class VueCourbe  extends Vue {
 	}
       
 	setDefaultCloseOperation(EXIT_ON_CLOSE);  
-	int largeur = valeurs.length  + 10;
+	int largeur = (valeurs.length * nbPixels ) + 10;
 	if (largeur > 1000)
             largeur = 1000;
 	setSize(largeur, 200);
