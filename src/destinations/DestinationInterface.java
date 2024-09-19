@@ -23,5 +23,7 @@ public  interface DestinationInterface <T>  {
      * @throws InformationNonConformeException si l'Information comporte des anomalies
      */
     public void recevoir(Information <T> information) throws InformationNonConformeException;
+
+
    
 }

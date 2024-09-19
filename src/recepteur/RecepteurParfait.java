@@ -7,9 +7,6 @@ import information.*;
  * La classe RecepteurParfait est un récepteur parfait qui reçoit des informations
  * modulées et les démodule en fonction du type de modulation (RZ, NRZ, NRZT).
  * Les échantillons reçus sont ensuite convertis en bits booléens (true ou false).
- *
- * @author 
- * @version 
  */
 public class RecepteurParfait extends Recepteur<Float, Boolean> {
 
@@ -33,9 +30,9 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
      */
     private String modulation = "NRZ";
     
-    
     private int nbElementRecue;
-    
+    private float esperance;
+
     /**
      * Constructeur du RecepteurParfait qui initialise les paramètres par défaut de Amax et Amin
      * en fonction de la modulation choisie.
@@ -67,6 +64,7 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         } 
         
         this.Amax = 5;
+        this.esperance = (this.Amax + this.Amin) / 2;
     }
     
     /**
@@ -112,6 +110,7 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
         } 
         
         this.Amax = Amax;
+        this.esperance = (this.Amax + this.Amin) / 2;
     }
 
     /**
@@ -120,7 +119,31 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
      * @throws InformationNonConformeException si une erreur survient lors de la démodulation
      */
     public void demodulerNRZT() throws InformationNonConformeException {
-        // TODO : Implémenter la démodulation NRZT
+        int nbBits = informationRecue.nbElements() / nbElementRecue;
+        int nbEchantillon = nbElementRecue / facteurDEchantillonnage;
+        float somme = 0;
+        int i = 0, j = 0;
+
+        for (Float f : informationRecue) {
+            j++;
+            // Calcul de la somme selon les conditions
+            if ((i == 0 && j > nbEchantillon) || (i == nbBits - 1 && j < 2 * nbEchantillon) || (i > 0 && i < nbBits - 1)) {
+                somme += f;
+            }
+
+            // Démodulation dès que l'échantillon est complet
+            if (j == nbElementRecue) {
+                boolean isOne = (i == 0 || i == nbBits - 1) 
+                                ? (somme / (2 * nbEchantillon) > esperance) 
+                                : (somme / nbElementRecue > esperance);
+
+                informationEmise.add(isOne);
+
+                i++;
+                j = 0;
+                somme = 0;
+            }
+        }
     }
 
     /**
@@ -149,36 +172,64 @@ public class RecepteurParfait extends Recepteur<Float, Boolean> {
      * @throws InformationNonConformeException si une erreur survient lors de la démodulation
      */
     public void demodulerRZ() throws InformationNonConformeException {
-        // TODO : Implémenter la démodulation RZ
+        int nbBits = informationRecue.nbElements() / nbElementRecue;
+        int nbEchantillon = nbElementRecue / 3;
+        float somme = 0;
+        int i = 0, j = 0;
+
+        for (Float f : informationRecue) {
+            j++;
+
+            // Calcul de la somme selon les conditions
+            if ((i == 0 && j > nbEchantillon) || (i == nbBits - 1 && j < 2 * nbEchantillon) || (i > 0 && i < nbBits - 1)) {
+                somme += f;
+            }
+
+            // Démodulation dès que l'échantillon est complet
+            if (j == nbElementRecue) {
+                boolean isOne = (i == 0 || i == nbBits - 1) 
+                                ? (somme / (2 * nbEchantillon) > esperance) 
+                                : (somme / nbElementRecue > esperance);
+
+                informationEmise.add(isOne);
+
+                i++;
+                j = 0;
+                somme = 0;
+            }
+        }
     }
     
-    
-    public void demodulation() throws InformationNonConformeException{
-    	this.nbElementRecue = informationRecue.nbElements(); // le this. n'est pas très utile ici
-    	
-    	if(nbElementRecue == 0) {
-    		throw new InformationNonConformeException("L'information ne peut pas être vide");
-    	}
-    	
-    	switch (modulation) {
+    /**
+     * Démodule les informations reçues en fonction de la modulation choisie.
+     * 
+     * @throws InformationNonConformeException si l'information reçue est vide
+     */
+    public void demodulation() throws InformationNonConformeException {
+        this.nbElementRecue = informationRecue.nbElements();
+        
+        if (nbElementRecue == 0) {
+            throw new InformationNonConformeException("L'information ne peut pas être vide");
+        }
+        
+        switch (modulation) {
         case "RZ" :
-        	demodulerRZ();
-        	break;
-        	
+            demodulerRZ();
+            break;
+            
         case "NRZ" :
-        	demodulerNRZ();
-        	break;
-        	
+            demodulerNRZ();
+            break;
+            
         case "NRZT" :
-        	demodulerNRZT();
-        	break;
+            demodulerNRZT();
+            break;
+        }
     }
-    }
-    
     
     /**
      * Reçoit les informations modulées, effectue la démodulation en fonction
-     * du type de modulation choisi, et émet l'information démoulée.
+     * du type de modulation choisi, et émet l'information démodulée.
      * 
      * @param information l'information reçue sous forme d'une liste de valeurs float
      * @throws InformationNonConformeException si les informations reçues sont incohérentes ou malformées

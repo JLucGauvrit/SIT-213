@@ -8,13 +8,14 @@ import information.Information;
  * @author prou
  */
 public class SondeAnalogique extends Sonde <Float> {
-   
+	int nbPixels = 100;
     /**
      * pour construire une sonde analogique
      * @param nom  le nom de la fenêtre d'affichage
      */
-    public SondeAnalogique(String nom) {
+    public SondeAnalogique(String nom, int nbPixels) {
 	super(nom);
+	this.nbPixels = nbPixels;
     }
    	 
     public void recevoir (Information <Float> information) { 
@@ -26,6 +27,7 @@ public class SondeAnalogique extends Sonde <Float> {
             table[i] = f;
             i++;
 	}
-	new VueCourbe (table, nom); 
+	
+	new VueCourbe (table, nbPixels, nom); 
     }
 }

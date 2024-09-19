@@ -1,9 +1,6 @@
 package emetteurs;
 
-import sources.*;
 import destinations.*;
-import transmetteurs.*;
-import visualisations.*;
 import information.*;
 
 /**
@@ -31,7 +28,6 @@ import information.*;
 public class EmetteurParfait extends Emetteur<Boolean,Float> {
 
     private String modulation = "NRZ";       
-    private int facteurDEchantillonage = 3;
     private float Amin;
     private float Amax;
     private int nbElementRecue;
@@ -42,16 +38,16 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
      * 
      * @param Amax Amplitude maximale du signal en sortie.
      * @param Amin Amplitude minimale du signal en sortie.
-     * @param facteurDEchantillonage Le nombre d'échantillons par symbole binaire.
      * @param modulation Le type de modulation utilisé (NRZ, NRZT, ou RZ).
      * @throws InformationNonConformeException Si les valeurs d'amplitude ou le type de modulation sont invalides.
      */
+    
+    
     public EmetteurParfait(float Amax, float Amin, int facteurDEchantillonage, String modulation) throws InformationNonConformeException {
         super();
-        informationRecue = new Information<>();
-        informationEmise = new Information<>();
+        informationRecue = new Information<Boolean>();
+        informationEmise = new Information<Float>();
 
-        this.facteurDEchantillonage = facteurDEchantillonage;
         this.modulation = modulation;
 
         // Validation des amplitudes d'entrée en fonction de la modulation
@@ -65,7 +61,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
         switch (modulation) {
             case "NRZT":
             case "NRZ":
-                if (Amin < 0) {
+                if (Amin > 0) {
                     throw new InformationNonConformeException("Amin doit être inférieur ou égal à 0");
                 }
                 this.Amin = Amin;
@@ -91,10 +87,9 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
      */
     public EmetteurParfait(int facteurDEchantillonage, String modulation) throws InformationNonConformeException {
         super();
-        informationRecue = new Information<>();
-        informationEmise = new Information<>();
-
-        this.facteurDEchantillonage = facteurDEchantillonage;
+        informationRecue = new Information<Boolean>();
+        informationEmise = new Information<Float>();
+        
         this.modulation = modulation;
 
         switch (modulation) {
@@ -166,12 +161,34 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
 	}
 
 	private void modulerNRZT() {
-		// TODO Auto-generated method stub
+		for(Boolean i : informationRecue) {
+			if(i.booleanValue()) {
+				informationEmise.add(Amax/2);
+    			informationEmise.add(Amax);
+    			informationEmise.add(Amax/2);
+    		}
+    		else {    
+    			informationEmise.add(Amin/2);
+    			informationEmise.add(Amin);
+    			informationEmise.add(Amin/2);
+    		}
+		}
 		
 	}
 
 	private void modulerRZ() {
-		// TODO Auto-generated method stub
+		for(Boolean i : informationRecue) {
+			if(i.booleanValue()) {
+				informationEmise.add(Amin);
+    			informationEmise.add(Amax);
+    			informationEmise.add(Amin);
+    		}
+    		else {    
+    			informationEmise.add(Amin);
+    			informationEmise.add(Amin);
+    			informationEmise.add(Amin);
+    		}
+		}
 		
 	}
 
@@ -183,7 +200,7 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
     @Override
     public void emettre() throws InformationNonConformeException {
     	for (DestinationInterface<Float> destinationConnectee : destinationsConnectees) {
-            destinationConnectee.recevoir(informationRecue);
+            destinationConnectee.recevoir(informationEmise);
         }
     }
 }
