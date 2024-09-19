@@ -197,6 +197,11 @@ public class Simulateur {
                         throw new ArgumentsException("Option de modulation invalide : " + args[i]);
                     }
                 }
+                
+                else if (args[i].matches("-freq")) {
+                	i++;
+                	facteurDEchantillonnage = Integer.valueOf(args[i]);
+                }
 
                 else throw new ArgumentsException("Option invalide : " + args[i]);
             }
