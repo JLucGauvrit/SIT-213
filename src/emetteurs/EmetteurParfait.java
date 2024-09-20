@@ -383,4 +383,39 @@ public class EmetteurParfait extends Emetteur<Boolean,Float> {
             destinationConnectee.recevoir(informationEmise);
         }
     }
+
+	/**
+	 * @return the modulation
+	 */
+	public String getModulation() {
+		return modulation;
+	}
+
+	/**
+	 * @return the amin
+	 */
+	public float getAmin() {
+		return Amin;
+	}
+
+	/**
+	 * @return the amax
+	 */
+	public float getAmax() {
+		return Amax;
+	}
+
+	/**
+	 * @return the nbElementRecue
+	 */
+	public int getNbElementRecue() {
+		return nbElementRecue;
+	}
+
+	/**
+	 * @return the facteurDEchantillonage
+	 */
+	public int getFacteurDEchantillonage() {
+		return facteurDEchantillonage;
+	}
 }
